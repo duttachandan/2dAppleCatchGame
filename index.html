@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Squirrel Apple Catcher Game</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #87ceeb;
+        flex-direction: column;
+      }
+      canvas {
+        border: 2px solid #555;
+        display: none; /* Hide initially */
+      }
+      #startButton, #restartButton {
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      #restartButton {
+        display: none; /* Hide initially */
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="700" height="600"></canvas>
+    <button id="startButton">Start the Game</button>
+    <button id="restartButton">Restart Game</button>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const startButton = document.getElementById("startButton");
+      const restartButton = document.getElementById("restartButton");
+
+      // Load images
+      const treeImg = new Image();
+      treeImg.src = "assets/tree.webp";
+      const squirrelImg = new Image();
+      squirrelImg.src = "assets/squirrel.png";
+      const appleImg = new Image();
+      appleImg.src = "assets/apple.png";
+
+      // Load eating sound
+      const eatSound = new Audio("assets/eat.mp3");
+
+      // Game variables
+      let isGameOver = false;
+      let score = 0;
+      let catchMessage = ""; 
+      let catchMessageTimer = 0; 
+
+      const squirrel = { x: 180, y: 450, width: 120, height: 120, speed: 5 };
+      const apple = { x: Math.random() * 360, y: 0, width: 60, height: 60, speed: 2 };
+
+      // Key handling
+      let keys = {};
+      window.addEventListener("keydown", (e) => keys[e.key] = true);
+      window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+      function startGame() {
+        // Reset game variables
+        isGameOver = false;
+        score = 0;
+        apple.y = 0;
+        apple.speed = 2;
+        canvas.style.display = "block"; // Show canvas
+        startButton.style.display = "none"; // Hide start button
+        restartButton.style.display = "none"; // Hide restart button
+        gameLoop();
+      }
+
+      function gameLoop() {
+        if (isGameOver) return gameOver();
+
+        // Draw the background tree image
+        function drawBackground() {
+          const canvasAspect = canvas.width / canvas.height;
+          const imgAspect = treeImg.width / treeImg.height;
+          let width, height, x, y;
+
+          if (imgAspect > canvasAspect) {
+            height = canvas.height;
+            width = height * imgAspect;
+            x = -(width - canvas.width) / 2;
+            y = 0;
+          } else {
+            width = canvas.width;
+            height = width / imgAspect;
+            x = 0;
+            y = -(height - canvas.height) / 2;
+          }
+          ctx.drawImage(treeImg, x, y, width, height);
+        }
+
+        drawBackground();
+
+        // Move squirrel
+        if (keys["ArrowLeft"] && squirrel.x > 0) squirrel.x -= squirrel.speed;
+        if (keys["ArrowRight"] && squirrel.x < canvas.width - squirrel.width)
+          squirrel.x += squirrel.speed;
+
+        // Move apple
+        apple.y += apple.speed;
+
+        // Check collision with squirrel
+        if (
+          apple.y + apple.height > squirrel.y &&
+          apple.x < squirrel.x + squirrel.width - 30 &&
+          apple.x + apple.width > squirrel.x
+        ) {
+          score++;
+          apple.y = 0;
+          apple.x = Math.random() * 360;
+          apple.speed += 0.4;
+
+          // Play eating sound
+          eatSound.currentTime = 0; // Reset sound to start
+          eatSound.play();
+
+          const messages = ["Sweet!", "Delicious!", "Yummy!", "Nice catch!"];
+          catchMessage = messages[Math.floor(Math.random() * messages.length)];
+          catchMessageTimer = 60;
+        }
+
+        if (apple.y > canvas.height) {
+          isGameOver = true;
+        }
+
+        ctx.drawImage(squirrelImg, squirrel.x, squirrel.y, squirrel.width, squirrel.height);
+        ctx.drawImage(appleImg, apple.x, apple.y, apple.width, apple.height);
+
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.textAlign = 'left'
+        ctx.fillText(`Score: ${score}`, 30, 20);
+
+        if (catchMessageTimer > 0) {
+          ctx.fillStyle = "purple";
+          ctx.font = "24px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(catchMessage, canvas.width / 2, canvas.height / 2);
+          catchMessageTimer--;
+        }
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      function gameOver() {
+        ctx.fillStyle = "black";
+        ctx.font = "30px Arial";
+        ctx.fillText("Game Over!", canvas.width / 2 - 70, canvas.height / 2);
+        ctx.font = "20px Arial";
+        ctx.fillText(`Final Score: ${score}`, canvas.width / 2 - 60, canvas.height / 2 + 30);
+
+        restartButton.style.display = "block"; // Show restart button
+      }
+
+      // Start game on button click
+      startButton.addEventListener("click", startGame);
+
+      // Restart game on button click
+      restartButton.addEventListener("click", startGame);
+
+      // Start game once all images are loaded
+      treeImg.onload = () => {
+        squirrelImg.onload = () => {
+          appleImg.onload = () => {
+            startButton.style.display = "block";
+          };
+        };
+      };
+    </script>
+  </body>
+</html>
