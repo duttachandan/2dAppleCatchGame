@@ -9,36 +9,71 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         height: 100vh;
         margin: 0;
         background: #87ceeb;
-        flex-direction: column;
       }
+
       canvas {
         border: 2px solid #555;
         display: none; /* Hide initially */
+        max-width: 90vw;
+        max-height: 80vh;
       }
-      #startButton, #restartButton {
+
+      #startButton,
+      #restartButton,
+      .control-button {
         padding: 10px 20px;
         font-size: 18px;
         cursor: pointer;
         margin-top: 10px;
       }
+
       #restartButton {
         display: none; /* Hide initially */
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .control-button {
+        padding: 15px 30px;
+        margin: 0 10px;
+        font-size: 18px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 8px;
+      }
+
+      .control-button:active {
+        background-color: #555;
       }
     </style>
   </head>
   <body>
-    <canvas id="gameCanvas" width="700" height="600"></canvas>
+    <canvas id="gameCanvas" width="700" height="1000"></canvas>
     <button id="startButton">Start the Game</button>
     <button id="restartButton">Restart Game</button>
+
+    <!-- Mobile controls -->
+    <div class="controls">
+      <button class="control-button" id="leftButton">⬅️ Left</button>
+      <button class="control-button" id="rightButton">➡️ Right</button>
+    </div>
 
     <script>
       const canvas = document.getElementById("gameCanvas");
       const ctx = canvas.getContext("2d");
       const startButton = document.getElementById("startButton");
       const restartButton = document.getElementById("restartButton");
+      const leftButton = document.getElementById("leftButton");
+      const rightButton = document.getElementById("rightButton");
 
       // Load images
       const treeImg = new Image();
@@ -54,16 +89,22 @@
       // Game variables
       let isGameOver = false;
       let score = 0;
-      let catchMessage = ""; 
-      let catchMessageTimer = 0; 
+      let catchMessage = "";
+      let catchMessageTimer = 0;
 
-      const squirrel = { x: 180, y: 450, width: 120, height: 120, speed: 5 };
-      const apple = { x: Math.random() * 360, y: 0, width: 60, height: 60, speed: 2 };
+      const squirrel = { x: 180, y: 850, width: 120, height: 120, speed: 5 };
+      const apple = {
+        x: Math.random() * 360,
+        y: 0,
+        width: 60,
+        height: 60,
+        speed: 2
+      };
 
       // Key handling
       let keys = {};
-      window.addEventListener("keydown", (e) => keys[e.key] = true);
-      window.addEventListener("keyup", (e) => keys[e.key] = false);
+      window.addEventListener("keydown", (e) => (keys[e.key] = true));
+      window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
       function startGame() {
         // Reset game variables
@@ -130,16 +171,23 @@
           catchMessageTimer = 60;
         }
 
+        // Check if the apple has fallen below the squirrel
         if (apple.y > canvas.height) {
           isGameOver = true;
         }
 
-        ctx.drawImage(squirrelImg, squirrel.x, squirrel.y, squirrel.width, squirrel.height);
+        ctx.drawImage(
+          squirrelImg,
+          squirrel.x,
+          squirrel.y,
+          squirrel.width,
+          squirrel.height
+        );
         ctx.drawImage(appleImg, apple.x, apple.y, apple.width, apple.height);
 
         ctx.fillStyle = "black";
         ctx.font = "20px Arial";
-        ctx.textAlign = 'left'
+        ctx.textAlign = "left";
         ctx.fillText(`Score: ${score}`, 30, 20);
 
         if (catchMessageTimer > 0) {
@@ -158,7 +206,11 @@
         ctx.font = "30px Arial";
         ctx.fillText("Game Over!", canvas.width / 2 - 70, canvas.height / 2);
         ctx.font = "20px Arial";
-        ctx.fillText(`Final Score: ${score}`, canvas.width / 2 - 60, canvas.height / 2 + 30);
+        ctx.fillText(
+          `Final Score: ${score}`,
+          canvas.width / 2 - 60,
+          canvas.height / 2 + 30
+        );
 
         restartButton.style.display = "block"; // Show restart button
       }
@@ -177,6 +229,24 @@
           };
         };
       };
+
+      // Mobile control button functionality
+      leftButton.addEventListener(
+        "touchstart",
+        () => (keys["ArrowLeft"] = true)
+      );
+      leftButton.addEventListener(
+        "touchend",
+        () => (keys["ArrowLeft"] = false)
+      );
+      rightButton.addEventListener(
+        "touchstart",
+        () => (keys["ArrowRight"] = true)
+      );
+      rightButton.addEventListener(
+        "touchend",
+        () => (keys["ArrowRight"] = false)
+      );
     </script>
   </body>
 </html>
